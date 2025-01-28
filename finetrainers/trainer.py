@@ -1359,6 +1359,8 @@ class Trainer:
         frames = frames[: max_num_frames].float()
         frames = frames.permute(0, 3, 1, 2).contiguous()
         frames = torch.stack([frame for frame in frames], dim=0)
+        # add singleton dimension for downstream inference since no preprocessing took place
+        frames = frames.unsqueeze(0)
         return frames
     
     @staticmethod
@@ -1381,4 +1383,6 @@ class Trainer:
         # nearest_res = self._find_nearest_resolution(frames.shape[2], frames.shape[3])
         # frames_resized = torch.stack([frame for frame in frames], dim=0)
         frames = torch.stack([frame for frame in frames], dim=0)
+        # adding singleton dimension for downstream inference.
+        frames = frames.unsqueeze(0)
         return frames

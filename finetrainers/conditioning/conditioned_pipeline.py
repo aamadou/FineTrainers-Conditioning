@@ -198,7 +198,7 @@ class LTXConditionedPipeline(LTXPipeline):
 
         img_ref_latent = condition_latents_prepare.prepare_latents_for_conditioning(
             vae=self.vae,
-            image_or_video=pose_video,
+            image_or_video=img_ref_video,
             patch_size=self.transformer.config.patch_size,
             patch_size_t=self.transformer.config.patch_size_t,
             device=device,
