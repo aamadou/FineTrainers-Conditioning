@@ -137,7 +137,7 @@ def conditional_validation(
     image: Optional[Image.Image] = None,
     video: Optional[List[Image.Image]] = None,
     pose_video: Optional[List[Image.Image]] = None,
-    image_ref_video: Optional[List[Image.Image]] = None,
+    img_ref_video: Optional[List[Image.Image]] = None,
     height: Optional[int] = None,
     width: Optional[int] = None,
     num_frames: Optional[int] = None,
@@ -157,15 +157,10 @@ def conditional_validation(
         "return_dict": True,
         "output_type": "pil",
         "pose_video": pose_video,
-        "image_ref_video": image_ref_video,
+        "img_ref_video": img_ref_video,
     }
 
-    # pose template noisey input [cat] img_ref + pose video 
-      
-    # pose template ref video latent + patchify video latent.
-    # img ref patchify video latent +
-    # add them together as input 
-    # residual x latent 
+
 
     generation_kwargs = {k: v for k, v in generation_kwargs.items() if v is not None}
     video = pipeline(**generation_kwargs).frames[0]

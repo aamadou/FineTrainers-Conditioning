@@ -6,7 +6,7 @@ import random
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
-
+from finetrainers.dataset import ImageOrVideoDataset
 import diffusers
 import torch
 import torch.backends
@@ -21,6 +21,10 @@ from accelerate.utils import (
     gather_object,
     set_seed,
 )
+import decord
+from typing import Tuple,Optional
+
+
 from diffusers import DiffusionPipeline
 from diffusers.configuration_utils import FrozenDict
 from diffusers.models.autoencoders.vae import DiagonalGaussianDistribution
@@ -816,6 +820,7 @@ class Trainer:
                             pose_img_ref_latents = torch.cat([pose_img_ref_latents,pose_noisy_latents], dim=1)
                             # project this turn into patches
 
+                            # concat tensor
                             pose_img_ref_latents = post_conditioned_latent_patchify(latents=pose_img_ref_latents,
                                                                             num_frames=latent_conditions["num_frames"],
                                                                             height=latent_conditions["height"],
@@ -829,7 +834,7 @@ class Trainer:
                                                                             width=latent_conditions["width"],
                                                                             patch_size = 1,
                                                                             patch_size_t = 1)
-                            # Target Latent Patchified
+                            # Target Latent Patchified concat tensor
                             # pose template noisey input [cat] img_ref + pose video 
                             latent_conditions.update({"noisy_latents": pose_img_ref_latents["latents"]})
                             # input video noise at level residual information to adapter
@@ -1027,9 +1032,9 @@ class Trainer:
 
             if self.pose_condition:
                 if pose_video is not None:
-                    pose_video = load_video(pose_video)
+                    pose_video = self.preprocess_condition_video(pose_video,max_num_frames=self.dataset.max_num_frames)
                 if img_ref_video is not None:
-                    img_ref_video = load_video(img_ref_video)
+                    img_ref_video = self.preprocess_condition_video_image_reference_video(path=img_ref_video,resolution_buckets=self.dataset.resolution_buckets,max_num_frames=self.dataset.max_num_frames)
                 
             logger.debug(
                 f"Validating sample {i + 1}/{num_validation_samples} on process {accelerator.process_index}. Prompt: {prompt}",
@@ -1053,6 +1058,7 @@ class Trainer:
                         self.args.seed if self.args.seed is not None else 0
                     ),
                 )
+
             else:
                 validation_artifacts = self.model_config["validation"](
                     pipeline=pipeline,
@@ -1335,3 +1341,44 @@ class Trainer:
         for component in components:
             if component is not None:
                 component.requires_grad_(True)
+
+    
+    # Two conditioning functions
+    @staticmethod
+    def preprocess_condition_video(path: Path,max_num_frames:int) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        r"""
+        Loads a single video, or latent and prompt embedding, based on initialization parameters.
+
+        Returns a [F, C, H, W] video tensor.
+        """
+        video_reader = decord.VideoReader(uri=Path(path).as_posix())
+        video_num_frames = len(video_reader)
+
+        indices = list(range(0, video_num_frames, video_num_frames // max_num_frames))
+        frames = video_reader.get_batch(indices)
+        frames = frames[: max_num_frames].float()
+        frames = frames.permute(0, 3, 1, 2).contiguous()
+        frames = torch.stack([frame for frame in frames], dim=0)
+        return frames
+    
+    @staticmethod
+    def preprocess_condition_video_image_reference_video(path: Path,resolution_buckets,max_num_frames) -> torch.Tensor:
+        video_reader = decord.VideoReader(uri=Path(path).as_posix())
+
+        video_num_frames = len(video_reader)
+        nearest_frame_bucket = min(
+            [bucket for bucket in resolution_buckets if bucket[0] <= video_num_frames],
+            key=lambda x: abs(x[0] - min(video_num_frames, max_num_frames)),
+            default=1,
+        )[0]
+
+        frame_indices = [0 for _ in range(video_num_frames)]
+        frames = video_reader.get_batch(frame_indices)
+        frames = frames[:nearest_frame_bucket].float()
+
+        frames = frames.permute(0, 3, 1, 2).contiguous()
+
+        # nearest_res = self._find_nearest_resolution(frames.shape[2], frames.shape[3])
+        # frames_resized = torch.stack([frame for frame in frames], dim=0)
+        frames = torch.stack([frame for frame in frames], dim=0)
+        return frames
