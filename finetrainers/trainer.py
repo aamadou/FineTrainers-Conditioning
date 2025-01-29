@@ -813,7 +813,7 @@ class Trainer:
                             noisy_latents = noisy_latents.to(target_video_latents.dtype)
 
                             # add pose information to both channels
-                            pose_noisy_latents = noisy_latents + pose_video_latents["latents"]
+                            pose_noisy_latents = noisy_latents # + pose_video_latents["latents"]
                             pose_img_ref_latents = img_refs_latents["latents"] + pose_video_latents["latents"]
                             
                             # expand channel information # B x 2C  latent will be projected to adapter to scale it back to 128d using adapter.
@@ -821,14 +821,14 @@ class Trainer:
                             # project this turn into patches
 
                             # concat tensor
-                            pose_img_ref_latents = post_conditioned_latent_patchify(latents=pose_img_ref_latents,
+                            pose_img_ref_tokens = post_conditioned_latent_patchify(latents=pose_img_ref_latents,
                                                                             num_frames=latent_conditions["num_frames"],
                                                                             height=latent_conditions["height"],
                                                                             width=latent_conditions["width"],
                                                                             patch_size = 1,
                                                                             patch_size_t = 1)
                             # target video as a input residual
-                            noisy_latents_residual = post_conditioned_latent_patchify(latents=noisy_latents,
+                            noisy_residual_tokens = post_conditioned_latent_patchify(latents=noisy_latents,
                                                                             num_frames=latent_conditions["num_frames"],
                                                                             height=latent_conditions["height"],
                                                                             width=latent_conditions["width"],
@@ -836,9 +836,9 @@ class Trainer:
                                                                             patch_size_t = 1)
                             # Target Latent Patchified concat tensor
                             # pose template noisey input [cat] img_ref + pose video 
-                            latent_conditions.update({"noisy_latents": pose_img_ref_latents["latents"]})
+                            latent_conditions.update({"noisy_latents": pose_img_ref_tokens["latents"]})
                             # input video noise at level residual information to adapter
-                            latent_conditions.update({"noisy_latents_residual":noisy_latents_residual["latents"]})
+                            latent_conditions.update({"noisy_latents_residual":noisy_residual_tokens["latents"]})
                         else:
                             # Default to flow-matching noise addition
                             noisy_latents = (1.0 - sigmas) * latent_conditions["latents"] + sigmas * noise
@@ -1029,7 +1029,7 @@ class Trainer:
                 image = load_image(image)
             if video is not None:
                 video = load_video(video)
-
+            # loading videos for inference ..
             if self.pose_condition:
                 if pose_video is not None:
                     pose_video = self.preprocess_condition_video(pose_video,max_num_frames=self.dataset.max_num_frames)

@@ -106,7 +106,7 @@ class LTXVideoConditionedTransformer3DModel(LTXVideoTransformer3DModel):
             # inject the condition and the residual then project it into the pretrained proj_in
             hidden_states = self.adapter(residual_x=residual_x,
                                         conditioned_x=hidden_states)
-
+            # whats this value ? 
             hidden_states = self.proj_in(hidden_states)
 
             temb, embedded_timestep = self.time_embed(
@@ -134,7 +134,7 @@ class LTXVideoConditionedTransformer3DModel(LTXVideoTransformer3DModel):
                         return custom_forward
 
                     ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
-                    hidden_states = torch.utils.checkpoint.checkpoint(
+                    hidden_states = torch.utils.checkpoint.checkpoint( # crashes here
                         create_custom_forward(block),
                         hidden_states,
                         encoder_hidden_states,

@@ -180,7 +180,7 @@ class LTXConditionedPipeline(LTXPipeline):
             height,
             width,
             num_frames,
-            torch.float32,
+            torch.bfloat16,
             device,
             generator,
         )
@@ -192,7 +192,7 @@ class LTXConditionedPipeline(LTXPipeline):
             patch_size=self.transformer.config.patch_size,
             patch_size_t=self.transformer.config.patch_size_t,
             device=device,
-            dtype=torch.float32,
+            dtype=torch.bfloat16,
             generator=generator,
         )["latents"]
 
@@ -202,7 +202,7 @@ class LTXConditionedPipeline(LTXPipeline):
             patch_size=self.transformer.config.patch_size,
             patch_size_t=self.transformer.config.patch_size_t,
             device=device,
-            dtype=torch.float32,
+            dtype=torch.bfloat16,
             generator=generator,
         )["latents"]
 
@@ -280,6 +280,8 @@ class LTXConditionedPipeline(LTXPipeline):
                 # change this 
                 # latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
                 # latent_model_input = latent_model_input.to(prompt_embeds.dtype)
+                
+                # might be  the bug ..
                 latent_model_input = noisy_latent_tokens
                 latent_model_input = latent_model_input.to(prompt_embeds.dtype)
 
