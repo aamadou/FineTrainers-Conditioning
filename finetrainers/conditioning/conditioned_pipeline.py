@@ -279,16 +279,16 @@ class LTXConditionedPipeline(LTXPipeline):
                     continue
                 # change this 
                 # latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
-                # latent_model_input = latent_model_input.to(prompt_embeds.dtype)
+                #latent_model_input = latent_model_input.to(prompt_embeds.dtype)
                 
                 # might be  the bug ..
-                latent_model_input = noisy_latent_tokens
+                latent_model_input = torch.cat([noisy_latent_tokens] * 2) if self.do_classifier_free_guidance else noisy_latent_tokens
                 latent_model_input = latent_model_input.to(prompt_embeds.dtype)
 
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latent_model_input.shape[0])
 
-                
+#encoder hidden states are different...           
                 noise_pred = self.transformer(
                     hidden_states=condition_tokens,
                     encoder_hidden_states=prompt_embeds,

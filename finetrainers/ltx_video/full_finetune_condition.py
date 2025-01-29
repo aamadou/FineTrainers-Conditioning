@@ -116,6 +116,9 @@ def conditioned_forward_pass(
 ) -> torch.Tensor:
     rope_interpolation_scale = [1 / 25, 32, 32]
    
+        # encoder_hidden_states=prompt_embeds,
+        # timestep=timesteps,
+        # encoder_attention_mask=prompt_attention_mask,
     denoised_latents = transformer(
         hidden_states=noisy_latents,
         encoder_hidden_states=prompt_embeds,
