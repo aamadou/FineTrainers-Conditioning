@@ -119,6 +119,10 @@ def conditioned_forward_pass(
         # encoder_hidden_states=prompt_embeds,
         # timestep=timesteps,
         # encoder_attention_mask=prompt_attention_mask,
+
+    if noisy_latents_residual == None:
+        print("Residual Not included in the calculation.")
+
     denoised_latents = transformer(
         hidden_states=noisy_latents,
         encoder_hidden_states=prompt_embeds,

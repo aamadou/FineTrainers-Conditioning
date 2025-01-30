@@ -93,8 +93,7 @@ class LTXVideoConditionedTransformer3DModel(LTXVideoTransformer3DModel):
             return_dict: bool = True,
             residual_x: torch.Tensor = None
         ) -> torch.Tensor:
-            if residual_x == None:
-                print("Residual Not included in the calculation.")
+           
             image_rotary_emb = self.rope(hidden_states, num_frames, height, width, rope_interpolation_scale)
 
             # convert encoder_attention_mask to a bias the same way we do for attention_mask

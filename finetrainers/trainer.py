@@ -840,7 +840,7 @@ class Trainer:
                             # That dict says latents but actually tokens.
                             latent_conditions.update({"noisy_latents": condition_tokens["latents"]})
                             # input video noise at level residual information to adapter
-                            latent_conditions.update({"noisy_latents_residual":noisy_residual_tokens["latents"]})
+                            # latent_conditions.update({"noisy_latents_residual":noisy_residual_tokens["latents"]})
                         else:
                             # Default to flow-matching noise addition
                             noisy_latents = (1.0 - sigmas) * latent_conditions["latents"] + sigmas * noise
