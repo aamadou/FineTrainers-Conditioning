@@ -85,13 +85,13 @@ class LTXVideoConditionedTransformer3DModel(LTXVideoTransformer3DModel):
             encoder_hidden_states: torch.Tensor,
             timestep: torch.LongTensor,
             encoder_attention_mask: torch.Tensor,
-            residual_x: torch.Tensor,
             num_frames: int,
             height: int,
             width: int,
             rope_interpolation_scale: Optional[Tuple[float, float, float]] = None,
             attention_kwargs: Optional[Dict[str, Any]] = None,
-            return_dict: bool = True
+            return_dict: bool = True,
+            residual_x: torch.Tensor = None
         ) -> torch.Tensor:
             if residual_x == None:
                 print("Residual Not included in the calculation.")
