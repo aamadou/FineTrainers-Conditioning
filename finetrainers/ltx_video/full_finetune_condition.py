@@ -111,7 +111,7 @@ def conditioned_forward_pass(
     num_frames: int,
     height: int,
     width: int,
-    noisy_latents_residual:torch.Tensor,
+    noisy_latents_residual:torch.Tensor=None,
     **kwargs,
 ) -> torch.Tensor:
     rope_interpolation_scale = [1 / 25, 32, 32]
