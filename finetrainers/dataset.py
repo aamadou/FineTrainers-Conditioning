@@ -299,6 +299,8 @@ class ImageOrVideoDataset(Dataset):
         nearest_res = self._find_nearest_resolution(frames.shape[2], frames.shape[3])
         frames_resized = torch.stack([resize(frame, nearest_res) for frame in frames], dim=0)
         frames = torch.stack([self.video_transforms(frame) for frame in frames_resized], dim=0)
+        # torch.Size([96, 3, 512, 768])
+    
 
         return frames
 
@@ -386,6 +388,7 @@ class ImageOrVideoDatasetWithResizeAndRectangleCrop(ImageOrVideoDataset):
 
     def _preprocess_video(self, path: Path) -> torch.Tensor:
         video_reader = decord.VideoReader(uri=path.as_posix())
+        
         video_num_frames = len(video_reader)
         nearest_frame_bucket = min(
             [bucket for bucket in self.resolution_buckets if bucket <= video_num_frames],

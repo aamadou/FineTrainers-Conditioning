@@ -73,7 +73,8 @@ def load_conditioned_diffusion_models(
     **kwargs,
 ) -> Dict[str, nn.Module]:
     transformer = LTXVideoConditionedTransformer3DModel.from_pretrained(
-        model_id, subfolder="transformer", torch_dtype=transformer_dtype, revision=revision, cache_dir=cache_dir
+        model_id, subfolder="transformer", torch_dtype=transformer_dtype, revision=revision, cache_dir=cache_dir,
+        save_directory=kwargs["output_dir"]
     )
     scheduler = FlowMatchEulerDiscreteScheduler()
     return {"transformer": transformer, "scheduler": scheduler}

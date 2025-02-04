@@ -330,7 +330,7 @@ class Trainer:
     def prepare_trainable_parameters(self) -> None:
         logger.info("Initializing trainable parameters")
 
-        diffusion_components = self.model_config["load_diffusion_models"](**self._get_load_components_kwargs())
+        diffusion_components = self.model_config["load_diffusion_models"](output_dir=self.args.output_dir,**self._get_load_components_kwargs())
         self._set_components(diffusion_components)
 
         components = [self.text_encoder, self.text_encoder_2, self.text_encoder_3, self.vae]
@@ -1039,9 +1039,9 @@ class Trainer:
             # loading videos for inference ..
             if self.pose_condition:
                 if pose_video is not None:
-                    pose_video = self.preprocess_condition_video(pose_video,max_num_frames=self.dataset.max_num_frames)
+                    pose_video = self.dataset._preprocess_video(Path(pose_video)).unsqueeze(0) #self.preprocess_condition_video(pose_video,max_num_frames=self.dataset.max_num_frames)
                 if img_ref_video is not None:
-                    img_ref_video = self.preprocess_condition_video_image_reference_video(path=img_ref_video,resolution_buckets=self.dataset.resolution_buckets,max_num_frames=self.dataset.max_num_frames)
+                    img_ref_video = self.dataset._preprocess_video_image_reference_video(Path(img_ref_video)).unsqueeze(0) #self.preprocess_condition_video_image_reference_video(path=img_ref_video,resolution_buckets=self.dataset.resolution_buckets,max_num_frames=self.dataset.max_num_frames)
                 
             logger.debug(
                 f"Validating sample {i + 1}/{num_validation_samples} on process {accelerator.process_index}. Prompt: {prompt}",
@@ -1393,3 +1393,9 @@ class Trainer:
         # adding singleton dimension for downstream inference.
         frames = frames.unsqueeze(0)
         return frames
+    
+    @staticmethod
+    def _find_nearest_resolution(resolutions, height, width):
+        nearest_res = min(resolutions, key=lambda x: abs(x[1] - height) + abs(x[2] - width))
+        return nearest_res[1], nearest_res[2]
+    

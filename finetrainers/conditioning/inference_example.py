@@ -5,7 +5,7 @@ from diffusers.utils import export_to_video
 from diffusers.utils import testing_utils
 testing_utils.enable_full_determinism()
 
-transformer = LTXVideoTransformer3DModel.from_pretrained("/home/ubuntu/upstream/finetrainers/ltx-video/ltxv_strip/checkpoint-38000/transformer/",torch_dtype=torch.bfloat16).to("cuda")
+#transformer = LTXVideoTransformer3DModel.from_pretrained("/home/ubuntu/upstream/finetrainers/ltx-video/ltxv_strip/checkpoint-38000/transformer/",torch_dtype=torch.bfloat16).to("cuda")
 pipe = LTXPipeline.from_pretrained(
     "Lightricks/LTX-Video", torch_dtype=torch.bfloat16,
     # transformer=transformer
@@ -20,6 +20,7 @@ for seconds in range(3, 8):
     num_frames = seconds * 24
 
     result = pipe(
+        guidance_scale=0,
         prompt=prompt,
         width=768,
         height=512,
