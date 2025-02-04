@@ -1039,10 +1039,11 @@ class Trainer:
             # loading videos for inference ..
             if self.pose_condition:
                 if pose_video is not None:
-                    pose_video = self.dataset._preprocess_video(Path(pose_video)).unsqueeze(0) #self.preprocess_condition_video(pose_video,max_num_frames=self.dataset.max_num_frames)
+                    pose_video,num_frames = self.dataset._preprocess_video(Path(pose_video)) #self.preprocess_condition_video(pose_video,max_num_frames=self.dataset.max_num_frames)
+                    pose_video = pose_video.unsqueeze(0)
                 if img_ref_video is not None:
-                    img_ref_video = self.dataset._preprocess_video_image_reference_video(Path(img_ref_video)).unsqueeze(0) #self.preprocess_condition_video_image_reference_video(path=img_ref_video,resolution_buckets=self.dataset.resolution_buckets,max_num_frames=self.dataset.max_num_frames)
-                
+                    img_ref_video = self.dataset._preprocess_video_image_reference_video(Path(img_ref_video),num_frames) #self.preprocess_condition_video_image_reference_video(path=img_ref_video,resolution_buckets=self.dataset.resolution_buckets,max_num_frames=self.dataset.max_num_frames)
+                    img_ref_video = img_ref_video.unsqueeze(0)
             logger.debug(
                 f"Validating sample {i + 1}/{num_validation_samples} on process {accelerator.process_index}. Prompt: {prompt}",
                 main_process_only=False,

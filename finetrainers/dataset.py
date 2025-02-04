@@ -144,11 +144,11 @@ class ImageOrVideoDataset(Dataset):
         if video_path.suffix.lower() in [".png", ".jpg", ".jpeg"]:
             video = self._preprocess_image(video_path)
         else:
-            video = self._preprocess_video(video_path)
+            video,_ = self._preprocess_video(video_path)
 
         if self.pose_column != None:
-            pose = self._preprocess_video(self.pose_paths[index])
-            img_ref = self._preprocess_video_image_reference_video(video_path)
+            pose,num_frames = self._preprocess_video(self.pose_paths[index])
+            img_ref = self._preprocess_video_image_reference_video(video_path,num_frames)
 
             return {
                 "prompt": prompt,
@@ -278,29 +278,30 @@ class ImageOrVideoDataset(Dataset):
         frames = frames[: self.max_num_frames].float()
         frames = frames.permute(0, 3, 1, 2).contiguous()
         frames = torch.stack([self.video_transforms(frame) for frame in frames], dim=0)
-        return frames
+        return frames,len(frames)
     
-    def _preprocess_video_image_reference_video(self, path: Path) -> torch.Tensor:
+    # use the frame_length of the pose video.
+    def _preprocess_video_image_reference_video(self, path: Path,frame_length:int) -> torch.Tensor:
         video_reader = decord.VideoReader(uri=path.as_posix())
 
         video_num_frames = len(video_reader)
-        nearest_frame_bucket = min(
-            [bucket for bucket in self.resolution_buckets if bucket[0] <= video_num_frames],
-            key=lambda x: abs(x[0] - min(video_num_frames, self.max_num_frames)),
-            default=1,
-        )[0]
+        # nearest_frame_bucket = min(
+        #     [bucket for bucket in self.resolution_buckets if bucket[0] <= video_num_frames],
+        #     key=lambda x: abs(x[0] - min(video_num_frames, self.max_num_frames)),
+        #     default=1,
+        # )[0]
 
-        frame_indices = [0 for _ in range(video_num_frames)]
+        frame_indices = [0 for _ in range(frame_length)]
         frames = video_reader.get_batch(frame_indices)
-        frames = frames[:nearest_frame_bucket].float()
+        # frames = frames[:nearest_frame_bucket].float()
 
         frames = frames.permute(0, 3, 1, 2).contiguous()
 
-        nearest_res = self._find_nearest_resolution(frames.shape[2], frames.shape[3])
-        frames_resized = torch.stack([resize(frame, nearest_res) for frame in frames], dim=0)
-        frames = torch.stack([self.video_transforms(frame) for frame in frames_resized], dim=0)
+        # nearest_res = self._find_nearest_resolution(frames.shape[2], frames.shape[3])
+        # frames_resized = torch.stack([resize(frame, nearest_res) for frame in frames], dim=0)
+        # frames = torch.stack([self.video_transforms(frame) for frame in frames_resized], dim=0)
         # torch.Size([96, 3, 512, 768])
-    
+        frames = torch.stack([self.video_transforms(frame) for frame in frames], dim=0)
 
         return frames
 
@@ -341,7 +342,7 @@ class ImageOrVideoDatasetWithResizing(ImageOrVideoDataset):
         frames_resized = torch.stack([resize(frame, nearest_res) for frame in frames], dim=0)
         frames = torch.stack([self.video_transforms(frame) for frame in frames_resized], dim=0)
 
-        return frames
+        return frames,len(frames)
 
     def _find_nearest_resolution(self, height, width):
         nearest_res = min(self.resolution_buckets, key=lambda x: abs(x[1] - height) + abs(x[2] - width))
