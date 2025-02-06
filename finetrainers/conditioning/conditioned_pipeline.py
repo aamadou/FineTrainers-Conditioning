@@ -213,31 +213,23 @@ class LTXConditionedPipeline(LTXPipeline):
         # residual x latent 
 
         # add pose information to both channels
-        noisy_latents = noise_latent + pose_latent
-        pose_img_ref_latents = img_ref_latent + pose_latent
-        
-        # expand channel information # B x 2C  latent will be projected to adapter to scale it back to 128d using adapter.
-        condition_latent = torch.cat([pose_img_ref_latents,noisy_latents], dim=1)
+        noisy_latents = noise_latent + pose_latent + img_ref_latent
 
         noise_latent_tokens = post_conditioned_latent_patchify(latents=noise_latent, num_frames=num_frames,
                                                                             height=height,
                                                                             width=width,
                                                                             patch_size = 1,
                                                                             patch_size_t = 1)["latents"]
+        # # expand channel information # B x 2C  latent will be projected to adapter to scale it back to 128d using adapter.
+        # condition_latent = torch.cat([pose_img_ref_latents,noisy_latents], dim=1)
 
-        condition_tokens = post_conditioned_latent_patchify(latents=condition_latent,
+        condition_tokens = post_conditioned_latent_patchify(latents=noisy_latents,
                                                                             num_frames=num_frames,
                                                                             height=height,
                                                                             width=width,
                                                                             patch_size = 1,
                                                                             patch_size_t = 1)["latents"]
-        # target video as a input residual
-        # noisy_residual_tokens = post_conditioned_latent_patchify(latents=noisy_latents,
-        #                                                 num_frames=num_frames,
-        #                                                 height=height,
-        #                                                 width=width,
-        #                                                 patch_size = 1,
-        #                                                 patch_size_t = 1)["latents"]
+      
         
         # Need to change the latents to
         # 5. Prepare timesteps

@@ -813,28 +813,18 @@ class Trainer:
                             noisy_latents = noisy_latents.to(target_video_latents.dtype)
 
                             # add pose information to both channels
-                            pose_noisy_latents = noisy_latents + pose_video_latents["latents"]
-                            pose_img_ref_latents = img_refs_latents["latents"] + pose_video_latents["latents"]
+                            pose_noisy_latents = noisy_latents + pose_video_latents["latents"] + img_refs_latents["latents"] 
                             
-                            # expand channel information # B x 2C  latent will be projected to adapter to scale it back to 128d using adapter.
-                            condition_latents = torch.cat([pose_img_ref_latents,pose_noisy_latents], dim=1)
-                            # project this turn into patches
-
+                          
                             # concat tensor
-                            condition_tokens = post_conditioned_latent_patchify(latents=condition_latents,
+                            condition_tokens = post_conditioned_latent_patchify(latents=pose_noisy_latents,
                                                                             num_frames=latent_conditions["num_frames"],
                                                                             height=latent_conditions["height"],
                                                                             width=latent_conditions["width"],
                                                                             patch_size = 1,
                                                                             patch_size_t = 1)
                             
-                            #  TODO REMOVE target video as a input residual might not need.
-                            noisy_residual_tokens = post_conditioned_latent_patchify(latents=noisy_latents,
-                                                                            num_frames=latent_conditions["num_frames"],
-                                                                            height=latent_conditions["height"],
-                                                                            width=latent_conditions["width"],
-                                                                            patch_size = 1,
-                                                                            patch_size_t = 1)
+                   
                             # Target Latent Patchified concat tensor
                             # pose template noisey input [cat] img_ref + pose video 
                             # That dict says latents but actually tokens.

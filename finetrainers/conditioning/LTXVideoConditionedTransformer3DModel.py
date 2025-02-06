@@ -48,58 +48,6 @@ class LTXVideoConditionedTransformer3DModel(LTXVideoTransformer3DModel):
             attention_out_bias=attention_out_bias
         )
 
-        # adapter.down_proj.weight
-        self.adapter = ConditionedResidualAdapterBottleneck(
-            input_dim=adapter_in_dim,
-            output_dim=128,
-            bottleneck_dim=64,
-            adapter_dropout=0.1,
-            adapter_init_scale=1e-3
-        )
-
-    @classmethod # rewrite this to ensure that if it doesn't have adapter weights it will load this way but if it has adapter weights it will not.
-    def from_pretrained(cls, pretrained_model_name_or_path,save_directory, **kwargs):
-        # First create an empty model with the desired architecture
-        print("Pretrain Loading")
-        model = cls()
-        model_dict = model.state_dict()
-        # # Then load the pretrained weights into it
-        pretrained = LTXVideoTransformer3DModel.from_pretrained(pretrained_model_name_or_path, **kwargs)
-        
-        # Copy over the pretrained weights for the shared components
-        pretrained_dict = pretrained.state_dict()
-
-        # Filter out adapter weights from the pretrained dict
-        filtered_dict = {}
-        for k, v in pretrained_dict.items():
-            if k in model_dict:
-                
-                filtered_dict[k] = v
-            else:
-                print(k)
-        # Update model with pretrained weights
-        model_dict.update(filtered_dict)
-
-        adapter_weights_path = os.path.join(save_directory, "adapter_weights.pth")
-        if os.path.exists(adapter_weights_path):
-            adapter_weights = torch.load(adapter_weights_path)
-            model.adapter.load_state_dict(adapter_weights)
-            print("Adapter weights loaded successfully.")
-        else:
-            print("No adapter weights file found. Using default adapter weights.")
-
-        model.load_state_dict(model_dict)
-        return model
-
-    def save_pretrained(self,save_directory):
-        model_state_dict = self.state_dict()
-        torch.save(model_state_dict, save_directory)
-        
-        adapter_state_dict = self.adapter.state_dict()
-        save_directory = os.path.dirname(save_directory)
-        path = os.path.join(save_directory, "adapter_weights.pth")
-        torch.save(adapter_state_dict, path)
-        print("Saving Model with Adapter")
 
     def forward(
             self,
@@ -125,9 +73,6 @@ class LTXVideoConditionedTransformer3DModel(LTXVideoTransformer3DModel):
 
             batch_size = hidden_states.size(0)
 
-            # inject the condition and the residual then project it into the pretrained proj_in
-            hidden_states = self.adapter(residual_x=residual_x,
-                                        conditioned_x=hidden_states)
             # whats this value ? 
             hidden_states = self.proj_in(hidden_states)
 
