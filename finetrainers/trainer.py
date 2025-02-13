@@ -813,7 +813,7 @@ class Trainer:
                             noisy_latents = noisy_latents.to(target_video_latents.dtype)
 
                             # add pose information to both channels
-                            pose_noisy_latents = noisy_latents + pose_video_latents["latents"]
+                            pose_noisy_latents = noisy_latents
                             pose_img_ref_latents = img_refs_latents["latents"] + pose_video_latents["latents"]
                             
                             # expand channel information # B x 2C  latent will be projected to adapter to scale it back to 128d using adapter.
